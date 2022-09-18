@@ -1,0 +1,258 @@
+/* ENTIRE PAGE */
+body {
+    background-color:darkslategray;
+    color: white;
+}
+
+hr {
+    border: 2px solid gray;
+    margin: 0;
+}
+
+#body-content {
+    margin-left: 30px;
+}
+
+/* REGISTER AND LOGIN */
+
+#register-page {
+    margin: 10px;
+}
+
+#login-page {
+    margin: 10px;
+}
+
+
+/* LAYOUT (TOP ROW) */
+
+#top-row {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+    font-family: "optima", "sans-serif";
+}
+
+#head {
+    margin-left: 30px;
+    font-family: "copperplate", "sans-serif";
+    font-size: 50px;
+}
+
+
+.nav {
+    padding-left: 60px;
+}
+
+.nav-item {
+    vertical-align: middle;
+    margin: 15px;
+    font-size: 20px;
+}
+
+.btn-link {
+    color: white;
+    text-decoration: none;
+    font-size: 20px;
+}
+
+.btn-link:hover {
+    color: gray;
+    text-decoration: none;
+}
+
+#signed-in {
+    display: block;
+    margin-left: auto;
+    margin-right: 20px;
+}
+
+.logout-sec {
+    display: inline-block;
+    margin-top: 10px;
+}
+
+.top-balance {
+    color: darkgoldenrod;
+}
+
+
+/* NAVBAR */
+
+#sports-nav {
+    display: flex;
+    float: left;
+    background-color: lightslategray;
+    height: 90vh;
+    width: 225px;
+    top: 0;
+    z-index: 999;
+}
+
+#sport-buttons {
+    display: flex;
+}
+
+.btn-nav {
+    list-style: none;
+    text-align: center;
+}
+
+.btn-nav button {
+    display: inline-block;
+    font-family: "impact", "sans-serif";
+    font-size: 20px;
+    margin-top: 20px;
+    margin-bottom: 15px;
+}
+
+
+/* GAMES PAGE (index) */
+
+.body-header {
+    padding: 20px;
+    background-color: gray;
+    position: sticky;
+    top: 0px;
+}
+
+.upper-body-header {
+    display: flex;
+}
+
+.clear-bet {
+    margin-left: auto;
+    margin-right: 20px;
+    white-space: nowrap;
+}
+
+.search {
+    margin-top: 20px;
+}
+
+.search-input {
+    border-radius: 10px;
+    outline: none;
+}
+
+#main-body {
+    margin-left: 225px;
+    margin-top: -10px;
+    font-family: "optima", "sans-serif"
+}
+
+.game-view {
+    height: 85vh;
+    overflow: scroll;
+}
+
+.game {
+    display: flex;
+    border-top: 1px solid lightslategray;
+    padding: 10px;
+    font-size: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+
+.final-score {
+    margin-left: 100px;
+    margin-right: auto;
+}
+
+.ml {
+    margin-left: 200px;
+}
+
+.spread {
+    margin-left: 50px;
+    margin-right: auto;
+}
+
+.wager {
+    visibility: hidden;
+    align-self: center;
+    top: 50%;
+    margin-left: auto;
+    margin-right: 50px;
+}
+
+.bet {
+    visibility: hidden;
+    align-self: center;
+    margin-left: auto;
+    margin-right: 100px;
+    top: 50%;
+}
+
+.away-team {
+    font-weight: 800;
+}
+.home-team {
+    font-weight: 800;
+}
+
+
+/* MAKING BETS */
+
+.bet-input {
+    display: none;
+}
+
+.bet-label {
+    padding: 5px;
+    background-blend-mode: darken;
+    box-shadow: black 0px 1px 2px;
+    cursor: pointer;
+}
+
+.bet-label:hover {
+    background-color: lightslategray;
+}
+
+input[type=radio]:checked + .bet-label {
+    background-color: darkgoldenrod;
+}
+
+#bet-alert {
+    margin: 10px;
+}
+
+
+/* PROFILE PAGE */
+
+#profile-header {
+    padding-bottom: 20px;
+    padding-left: 20px;
+    padding-top: 15px;
+    background-color: gray;
+}
+
+.user-info {
+    padding-right: 20px;
+}
+
+#my-bets {
+    margin: 10px;
+    margin-left: 20px;
+}
+
+#bet-container {
+    padding: 10px;
+}
+
+#pending-bets {
+    overflow: scroll;
+    height: 55vh;
+}
+
+#completed-bets {
+    overflow: scroll;
+    height: 55vh;
+}
+
+.profile-bet {
+    border-top: 1px solid gray;
+    padding-top: 15px;
+}

@@ -1,0 +1,742 @@
+{% extends 'sportsbook/layout.html' %}
+{% load static %}
+
+{% block body %}
+
+    <div id="bet-alert">
+        {% for message in messages %}
+            <div class="alert alert-success msg fade show" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="True">&times;</span>
+                </button>
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+
+
+
+    <div class="game-view" id="allgames-view">
+        <div class="body-header">
+            <div class="upper-body-header">
+                <div class="header-msg">
+                    <strong>NOTE: Website will be down from {{ update_display }} to {{ update_end }} EST for updates.</strong>
+                </div>
+                <div class="clear-bet">
+                    <button class="btn btn-light" onclick="clearInput()">Clear Selections</button>
+                </div>
+            </div>
+            <div class="search">
+                <form action="{% url 'index' %}" method="POST">
+                    {% csrf_token %}
+                    Search Team: <input type="text" name="search" class="search-input">
+                    <input value="Search" type="submit">
+                </form>
+            </div>
+        </div>
+    
+        <br>
+        {% if all_games|length == 0 %}
+            <div class="no-games">
+                No games available.
+            </div>
+        {% endif %}
+        {% for game in all_games %}
+            <form id="all-form" action="{% url 'place_bet' id=game.id %}" method="POST">
+                {% csrf_token %}
+                <div class="game" id="game-{{ game.id }}">
+                    <div class="game-teams">
+                        <p class="commence-time"><strong>{{ game.commence_time }} EST</strong></p>
+                        <p class="away-team">{{ game.away_team }}</p>
+                        <p class="team-at">AT</p>
+                        <p class="home-team">{{ game.home_team }}</p>
+                    </div>
+                {% if user.is_authenticated %}
+                {% if game.home_ml is not None and game.away_ml is not None %}
+                    <div class="ml">
+                        <p class="market">Money Line</p>
+
+                        <input type="radio" name="bet-select-{{ game.id }}" id="away-ml-btn-{{ game.id }}" class="bet-input" value="away-ml">
+                        <label for="away-ml-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'all', '{{ game.id }}' )">
+                            {% if game.away_ml > 0 %}
+                                +{{ game.away_ml }}
+                            {% else %}
+                                {{ game.away_ml }}
+                            {% endif %}
+                        </label>
+                        <p>________________</p>
+                        <input type="radio" name="bet-select-{{ game.id }}" id="home-ml-btn-{{ game.id }}" class="bet-input" value="home-ml">
+                        <label for="home-ml-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'all', '{{ game.id }}' )">
+                            {% if game.home_ml > 0 %}
+                                +{{ game.home_ml }}
+                            {% else %}
+                                {{ game.home_ml }}
+                            {% endif %}
+                        </label>
+                    </div>
+                {% endif %}
+                {% if game.away_point is not None and game.home_point is not None and game.home_price is not None and game.away_price is not None %}
+                    <div class="spread">
+                        <p class="market">Spread</p>
+                        <input type="radio" name="bet-select-{{ game.id }}" id="away-spr-btn-{{ game.id }}" class="bet-input" value="away-spread">
+                        <label for="away-spr-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'all', '{{ game.id }}' )">
+                            {% if game.away_point > 0 and game.away_price > 0 %}
+                                +{{ game.away_point }} at +{{ game.away_price }}
+                            {% elif game.away_point > 0 and game.away_price < 0 %}
+                                +{{ game.away_point }} at {{ game.away_price }}
+                            {% elif game.away_point < 0 and game.away_price > 0 %}
+                                {{ game.away_point }} at +{{ game.away_price }}
+                            {% else %}
+                                {{ game.away_point }} at {{ game.away_price }}
+                            {% endif %}
+                        </label>
+                        <p>________________</p>
+                        <input type="radio" name="bet-select-{{ game.id }}" id="home-spr-btn-{{ game.id }}" class="bet-input" value="home-spread">
+                        <label for="home-spr-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'all', '{{ game.id }}' )">
+                            {% if game.home_point > 0 and game.home_price > 0 %}
+                                +{{ game.home_point }} at +{{ game.home_price }}
+                            {% elif game.home_point > 0 and game.home_price < 0 %}
+                                +{{ game.home_point }} at {{ game.home_price }}
+                            {% elif game.home_point < 0 and game.home_price > 0 %}
+                                {{ game.home_point }} at +{{ game.home_price }}
+                            {% else %}
+                                {{ game.home_point }} at {{ game.home_price }}
+                            {% endif %}
+                        </label>
+                    </div>
+                {% endif %}
+                    <div class="wager">
+                        <input type="number" min="1" name="wager" class="wager_input" id="all-wager-{{ game.id }}" placeholder="0.00" required>
+                    </div>
+
+                    <div class="bet">
+                        <button class="btn btn-dark" id="all-bet-submit-{{ game.id }}" type="submit">Place Bet</button>
+                    </div>
+                {% endif %}
+                </div>
+            </form>
+        {% endfor %}
+    </div>
+    <div class="game-view" id="nba-view">
+        <div class="body-header">
+            <div class="upper-body-header">
+                <div class="header-msg">
+                    <strong>NOTE: Log in between {{ update_display }} and {{ update_end }} EST to cash completed bets.</strong>
+                </div>
+                <div class="clear-bet">
+                    <button class="btn btn-light" onclick="clearInput()">Clear Selections</button>
+                </div>
+            </div>
+            <div class="search">
+                <form action="{% url 'index' %}" method="POST">
+                    {% csrf_token %}
+                    Search Team: <input type="text" name="search" class="search-input">
+                    <input value="Search" type="submit">
+                </form>
+            </div>
+        </div>
+    
+        <br>
+        {% if nba_games|length == 0 %}
+            <div class="no-games">
+                No NBA games available.
+            </div>
+        {% endif %}
+        {% for game in nba_games %}
+            <form id="all-form" action="{% url 'place_bet' id=game.id %}" method="POST">
+                {% csrf_token %}
+                <div class="game" id="game-{{ game.id }}">
+                    <div class="game-teams">
+                        <p class="commence-time"><strong>{{ game.commence_time }} EST</strong></p>
+                        <p class="away-team">{{ game.away_team }}</p>
+                        <p class="team-at">AT</p>
+                        <p class="home-team">{{ game.home_team }}</p>
+                    </div>
+                {% if user.is_authenticated %}
+                {% if game.home_ml is not None and game.away_ml is not None %}
+                    <div class="ml">
+                        <p class="market">Money Line</p>
+
+                        <input type="radio" name="bet-select-{{ game.id }}" id="nba-away-ml-btn-{{ game.id }}" class="bet-input" value="away-ml">
+                        <label for="nba-away-ml-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'nba', '{{ game.id }}' )">
+                            {% if game.away_ml > 0 %}
+                                +{{ game.away_ml }}
+                            {% else %}
+                                {{ game.away_ml }}
+                            {% endif %}
+                        </label>
+                        <p>________________</p>
+                        <input type="radio" name="bet-select-{{ game.id }}" id="nba-home-ml-btn-{{ game.id }}" class="bet-input" value="home-ml">
+                        <label for="nba-home-ml-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'nba', '{{ game.id }}' )">
+                            {% if game.home_ml > 0 %}
+                                +{{ game.home_ml }}
+                            {% else %}
+                                {{ game.home_ml }}
+                            {% endif %}
+                        </label>
+                    </div>
+                {% endif %}
+                    {% if game.away_point is not None and game.home_point is not None and game.home_price is not None and game.away_price is not None %}
+                    <div class="spread">
+                        <p class="market">Spread</p>
+                        <input type="radio" name="bet-select-{{ game.id }}" id="nba-away-spr-btn-{{ game.id }}" class="bet-input" value="away-spread">
+                        <label for="nba-away-spr-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'nba', '{{ game.id }}' )">
+                            {% if game.away_point > 0 and game.away_price > 0 %}
+                                +{{ game.away_point }} at +{{ game.away_price }}
+                            {% elif game.away_point > 0 and game.away_price < 0 %}
+                                +{{ game.away_point }} at {{ game.away_price }}
+                            {% elif game.away_point < 0 and game.away_price > 0 %}
+                                {{ game.away_point }} at +{{ game.away_price }}
+                            {% else %}
+                                {{ game.away_point }} at {{ game.away_price }}
+                            {% endif %}
+                        </label>
+                        <p>________________</p>
+                        <input type="radio" name="bet-select-{{ game.id }}" id="nba-home-spr-btn-{{ game.id }}" class="bet-input" value="home-spread">
+                        <label for="nba-home-spr-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'nba', '{{ game.id }}' )">
+                            {% if game.home_point > 0 and game.home_price > 0 %}
+                                +{{ game.home_point }} at +{{ game.home_price }}
+                            {% elif game.home_point > 0 and game.home_price < 0 %}
+                                +{{ game.home_point }} at {{ game.home_price }}
+                            {% elif game.home_point < 0 and game.home_price > 0 %}
+                                {{ game.home_point }} at +{{ game.home_price }}
+                            {% else %}
+                                {{ game.home_point }} at {{ game.home_price }}
+                            {% endif %}
+                        </label>
+                    </div>
+                    {% endif %}
+
+                    <div class="wager">
+                        <input type="number" min="1" name="wager" class="wager_input" id="nba-wager-{{ game.id }}" placeholder="0.00">
+                    </div>
+
+                    <div class="bet">
+                        <button class="btn btn-dark" id="nba-bet-submit-{{ game.id }}" type="submit">Place Bet</button>
+                    </div>
+                {% endif %}
+                </div>
+            </form>
+        {% endfor %}
+    </div>
+    <div class="game-view" id="nfl-view">
+        <div class="body-header">
+            <div class="upper-body-header">
+                <div class="header-msg">
+                    <strong>NOTE: Log in between {{ update_display }} and {{ update_end }} EST to cash completed bets.</strong>
+                </div>
+                <div class="clear-bet">
+                    <button class="btn btn-light" onclick="clearInput()">Clear Selections</button>
+                </div>
+            </div>
+            <div class="search">
+                <form action="{% url 'index' %}" method="POST">
+                    {% csrf_token %}
+                    Search Team: <input type="text" name="search" class="search-input">
+                    <input value="Search" type="submit">
+                </form>
+            </div>
+        </div>
+    
+        <br>
+        {% if nfl_games|length == 0 %}
+            <div class="no-games">
+                No NFL games available.
+            </div>
+        {% endif %}
+        {% for game in nfl_games %}
+            <form id="all-form" action="{% url 'place_bet' id=game.id %}" method="POST">
+                {% csrf_token %}
+                <div class="game" id="game-{{ game.id }}">
+                    <div class="game-teams">
+                        <p class="commence-time"><strong>{{ game.commence_time }} EST</strong></p>
+                        <p class="away-team">{{ game.away_team }}</p>
+                        <p class="team-at">AT</p>
+                        <p class="home-team">{{ game.home_team }}</p>
+                    </div>
+                {% if user.is_authenticated %}
+                {% if game.home_ml is not None and game.away_ml is not None %}
+                    <div class="ml">
+                        <p class="market">Money Line</p>
+
+                        <input type="radio" name="bet-select-{{ game.id }}" id="nfl-away-ml-btn-{{ game.id }}" class="bet-input" value="away-ml">
+                        <label for="nfl-away-ml-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'nfl', '{{ game.id }}' )">
+                            {% if game.away_ml > 0 %}
+                                +{{ game.away_ml }}
+                            {% else %}
+                                {{ game.away_ml }}
+                            {% endif %}
+                        </label>
+                        <p>________________</p>
+                        <input type="radio" name="bet-select-{{ game.id }}" id="nfl-home-ml-btn-{{ game.id }}" class="bet-input" value="home-ml">
+                        <label for="nfl-home-ml-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'nfl', '{{ game.id }}' )">
+                            {% if game.home_ml > 0 %}
+                                +{{ game.home_ml }}
+                            {% else %}
+                                {{ game.home_ml }}
+                            {% endif %}
+                        </label>
+                    </div>
+                {% endif %}
+                    {% if game.away_point is not None and game.home_point is not None and game.home_price is not None and game.away_price is not None %}
+                    <div class="spread">
+                        <p class="market">Spread</p>
+                        <input type="radio" name="bet-select-{{ game.id }}" id="nfl-away-spr-btn-{{ game.id }}" class="bet-input" value="away-spread">
+                        <label for="nfl-away-spr-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'nfl', '{{ game.id }}' )">
+                            {% if game.away_point > 0 and game.away_price > 0 %}
+                                +{{ game.away_point }} at +{{ game.away_price }}
+                            {% elif game.away_point > 0 and game.away_price < 0 %}
+                                +{{ game.away_point }} at {{ game.away_price }}
+                            {% elif game.away_point < 0 and game.away_price > 0 %}
+                                {{ game.away_point }} at +{{ game.away_price }}
+                            {% else %}
+                                {{ game.away_point }} at {{ game.away_price }}
+                            {% endif %}
+                        </label>
+                        <p>________________</p>
+                        <input type="radio" name="bet-select-{{ game.id }}" id="nfl-home-spr-btn-{{ game.id }}" class="bet-input" value="home-spread">
+                        <label for="nfl-home-spr-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'nfl', '{{ game.id }}' )">
+                            {% if game.home_point > 0 and game.home_price > 0 %}
+                                +{{ game.home_point }} at +{{ game.home_price }}
+                            {% elif game.home_point > 0 and game.home_price < 0 %}
+                                +{{ game.home_point }} at {{ game.home_price }}
+                            {% elif game.home_point < 0 and game.home_price > 0 %}
+                                {{ game.home_point }} at +{{ game.home_price }}
+                            {% else %}
+                                {{ game.home_point }} at {{ game.home_price }}
+                            {% endif %}
+                        </label>
+                    </div>
+                    {% endif %}
+                    <div class="wager">
+                        <input type="number" min="1" name="wager" class="wager_input" id="nfl-wager-{{ game.id }}" placeholder="0.00">
+                    </div>
+
+                    <div class="bet">
+                        <button class="btn btn-dark" id="nfl-bet-submit-{{ game.id }}" type="submit">Place Bet</button>
+                    </div>
+                {% endif %}
+                </div>
+            </form>
+        {% endfor %}
+    </div>
+    <div class="game-view" id="mlb-view">
+        <div class="body-header">
+            <div class="upper-body-header">
+                <div class="header-msg">
+                    <strong>NOTE: Log in between {{ update_display }} and {{ update_end }} EST to cash completed bets.</strong>
+                </div>
+                <div class="clear-bet">
+                    <button class="btn btn-light" onclick="clearInput()">Clear Selections</button>
+                </div>
+            </div>
+            <div class="search">
+                <form action="{% url 'index' %}" method="POST">
+                    {% csrf_token %}
+                    Search Team: <input type="text" name="search" class="search-input">
+                    <input value="Search" type="submit">
+                </form>
+            </div>
+        </div>
+    
+        <br>
+        {% if mlb_games|length == 0 %}
+            <div class="no-games">
+                No MLB games available.
+            </div>
+        {% endif %}
+        {% for game in mlb_games %}
+            <form id="all-form" action="{% url 'place_bet' id=game.id %}" method="POST">
+                {% csrf_token %}
+                <div class="game" id="game-{{ game.id }}">
+                    <div class="game-teams">
+                        <p class="commence-time"><strong>{{ game.commence_time }} EST</strong></p>
+                        <p class="away-team">{{ game.away_team }}</p>
+                        <p class="team-at">AT</p>
+                        <p class="home-team">{{ game.home_team }}</p>
+                    </div>
+                    {% if user.is_authenticated %}
+                    {% if game.home_ml is not None and game.away_ml is not None %}
+                    <div class="ml">
+                        <p class="market">Money Line</p>
+
+                        <input type="radio" name="bet-select-{{ game.id }}" id="mlb-away-ml-btn-{{ game.id }}" class="bet-input" value="away-ml">
+                        <label for="mlb-away-ml-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'mlb', '{{ game.id }}' )">
+                            {% if game.away_ml > 0 %}
+                                +{{ game.away_ml }}
+                            {% else %}
+                                {{ game.away_ml }}
+                            {% endif %}
+                        </label>
+                        <p>________________</p>
+                        <input type="radio" name="bet-select-{{ game.id }}" id="mlb-home-ml-btn-{{ game.id }}" class="bet-input" value="home-ml">
+                        <label for="mlb-home-ml-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'mlb', '{{ game.id }}' )">
+                            {% if game.home_ml > 0 %}
+                                +{{ game.home_ml }}
+                            {% else %}
+                                {{ game.home_ml }}
+                            {% endif %}
+                        </label>
+                    </div>
+                    {% endif %}
+                    {% if game.away_point is not None and game.home_point is not None and game.home_price is not None and game.away_price is not None %}
+                    <div class="spread">
+                        <p class="market">Spread</p>
+                        <input type="radio" name="bet-select-{{ game.id }}" id="mlb-away-spr-btn-{{ game.id }}" class="bet-input" value="away-spread">
+                        <label for="mlb-away-spr-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'mlb', '{{ game.id }}' )">
+                            {% if game.away_point > 0 and game.away_price > 0 %}
+                                +{{ game.away_point }} at +{{ game.away_price }}
+                            {% elif game.away_point > 0 and game.away_price < 0 %}
+                                +{{ game.away_point }} at {{ game.away_price }}
+                            {% elif game.away_point < 0 and game.away_price > 0 %}
+                                {{ game.away_point }} at +{{ game.away_price }}
+                            {% else %}
+                                {{ game.away_point }} at {{ game.away_price }}
+                            {% endif %}
+                        </label>
+                        <p>________________</p>
+                        <input type="radio" name="bet-select-{{ game.id }}" id="mlb-home-spr-btn-{{ game.id }}" class="bet-input" value="home-spread">
+                        <label for="mlb-home-spr-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'mlb', '{{ game.id }}' )">
+                            {% if game.home_point > 0 and game.home_price > 0 %}
+                                +{{ game.home_point }} at +{{ game.home_price }}
+                            {% elif game.home_point > 0 and game.home_price < 0 %}
+                                +{{ game.home_point }} at {{ game.home_price }}
+                            {% elif game.home_point < 0 and game.home_price > 0 %}
+                                {{ game.home_point }} at +{{ game.home_price }}
+                            {% else %}
+                                {{ game.home_point }} at {{ game.home_price }}
+                            {% endif %}
+                        </label>
+                    </div>
+                    {% endif %}
+                    <div class="wager">
+                        <input type="number" min="1" name="wager" class="wager_input" id="mlb-wager-{{ game.id }}" placeholder="0.00">
+                    </div>
+
+                    <div class="bet">
+                        <button class="btn btn-dark" id="mlb-bet-submit-{{ game.id }}" type="submit">Place Bet</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </form>
+        {% endfor %}
+    </div>
+    <div class="game-view" id="nhl-view">
+        <div class="body-header">
+            <div class="upper-body-header">
+                <div class="header-msg">
+                    <strong>NOTE: Log in between {{ update_display }} and {{ update_end }} EST to cash completed bets.</strong>
+                </div>
+                <div class="clear-bet">
+                    <button class="btn btn-light" onclick="clearInput()">Clear Selections</button>
+                </div>
+            </div>
+            <div class="search">
+                <form action="{% url 'index' %}" method="POST">
+                    {% csrf_token %}
+                    Search Team: <input type="text" name="search" class="search-input">
+                    <input value="Search" type="submit">
+                </form>
+            </div>
+        </div>
+    
+        <br>
+        {% if nhl_games|length == 0 %}
+            <div class="no-games">
+                No NHL games available.
+            </div>
+        {% endif %}
+        {% for game in nhl_games %}
+            <form id="all-form" action="{% url 'place_bet' id=game.id %}" method="POST">
+                {% csrf_token %}
+                <div class="game" id="game-{{ game.id }}">
+                    <div class="game-teams">
+                        <p class="commence-time"><strong>{{ game.commence_time }} EST</strong></p>
+                        <p class="away-team">{{ game.away_team }}</p>
+                        <p class="team-at">AT</p>
+                        <p class="home-team">{{ game.home_team }}</p>
+                    </div>
+                    {% if user.is_authenticated %}
+                    {% if game.home_ml is not None and game.away_ml is not None %}
+                    <div class="ml">
+                        <p class="market">Money Line</p>
+
+                        <input type="radio" name="bet-select-{{ game.id }}" id="nhl-away-ml-btn-{{ game.id }}" class="bet-input" value="away-ml">
+                        <label for="nhl-away-ml-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'nhl', '{{ game.id }}' )">
+                            {% if game.away_ml > 0 %}
+                                +{{ game.away_ml }}
+                            {% else %}
+                                {{ game.away_ml }}
+                            {% endif %}
+                        </label>
+                        <p>________________</p>
+                        <input type="radio" name="bet-select-{{ game.id }}" id="nhl-home-ml-btn-{{ game.id }}" class="bet-input" value="home-ml">
+                        <label for="nhl-home-ml-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'nhl', '{{ game.id }}' )">
+                            {% if game.home_ml > 0 %}
+                                +{{ game.home_ml }}
+                            {% else %}
+                                {{ game.home_ml }}
+                            {% endif %}
+                        </label>
+                    </div>
+                    {% endif %}
+                    {% if game.away_point is not None and game.home_point is not None and game.home_price is not None and game.away_price is not None %}
+                    <div class="spread">
+                        <p class="market">Spread</p>
+                        <input type="radio" name="bet-select-{{ game.id }}" id="nhl-away-spr-btn-{{ game.id }}" class="bet-input" value="away-spread">
+                        <label for="nhl-away-spr-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'nhl', '{{ game.id }}' )">
+                            {% if game.away_point > 0 and game.away_price > 0 %}
+                                +{{ game.away_point }} at +{{ game.away_price }}
+                            {% elif game.away_point > 0 and game.away_price < 0 %}
+                                +{{ game.away_point }} at {{ game.away_price }}
+                            {% elif game.away_point < 0 and game.away_price > 0 %}
+                                {{ game.away_point }} at +{{ game.away_price }}
+                            {% else %}
+                                {{ game.away_point }} at {{ game.away_price }}
+                            {% endif %}
+                        </label>
+                        <p>________________</p>
+                        <input type="radio" name="bet-select-{{ game.id }}" id="nhl-home-spr-btn-{{ game.id }}" class="bet-input" value="home-spread">
+                        <label for="nhl-home-spr-btn-{{ game.id }}" class="bet-label" onclick="displayWager( 'nhl', '{{ game.id }}' )">
+                            {% if game.home_point > 0 and game.home_price > 0 %}
+                                +{{ game.home_point }} at +{{ game.home_price }}
+                            {% elif game.home_point > 0 and game.home_price < 0 %}
+                                +{{ game.home_point }} at {{ game.home_price }}
+                            {% elif game.home_point < 0 and game.home_price > 0 %}
+                                {{ game.home_point }} at +{{ game.home_price }}
+                            {% else %}
+                                {{ game.home_point }} at {{ game.home_price }}
+                            {% endif %}
+                        </label>
+                    </div>
+                    {% endif %}
+                    <div class="wager">
+                        <input type="number" min="1" name="wager" class="wager_input" id="nhl-wager-{{ game.id }}" placeholder="0.00">
+                    </div>
+
+                    <div class="bet">
+                        <button class="btn btn-dark" id="nhl-bet-submit-{{ game.id }}" type="submit">Place Bet</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </form>
+        {% endfor %}
+    </div>
+    <div class="game-view" id="pastgames-view">
+        <div class="body-header">
+            <div class="upper-body-header">
+                <div class="header-msg">
+                    <strong>NOTE: Log in between {{ update_display }} and {{ update_end }} EST to cash completed bets.</strong>
+                </div>
+                <div class="clear-bet">
+                    <button class="btn btn-light" onclick="clearInput()">Clear Selections</button>
+                </div>
+            </div>
+            <div class="search">
+                <form action="{% url 'index' %}" method="POST">
+                    {% csrf_token %}
+                    Search Team: <input type="text" name="search" class="search-input">
+                    <input value="Search" type="submit">
+                </form>
+            </div>
+        </div>
+    
+        <br>
+        {% if past_games|length == 0 %}
+            <div class="no-games">
+                No games available.
+            </div>
+        {% endif %}
+        {% for game in past_games %}
+            <div class="game" id="game-{{ game.id }}">
+                <div class="game-teams">
+                    <p class="commence-time"><strong>{{ game.commence_time }} EST</strong></p>
+                    <p class="away-team">{{ game.away_team }}</p>
+                    <p class="team-at">AT</p>
+                    <p class="home-team">{{ game.home_team }}</p>
+                </div>
+                <div class="final-score">
+                    <p class="score-title">FINAL:</p>
+                    <p class="away-score">{{ game.away_score }}</p>
+                    <p class="score-to">to</p>
+                    <p class="home-score">{{ game.home_score }}</p>
+                </div>
+                {% if user.is_authenticated %}
+                <div class="ml">
+                    <p class="market">Money Line</p>
+                    <p class="away_ml">
+                        {% if game.away_ml > 0 %}
+                            +{{ game.away_ml }}
+                        {% else %}
+                            {{ game.away_ml }}
+                        {% endif %}
+                    </p>
+                    <p>________________</p>
+                    <p class="home_ml">
+                        {% if game.home_ml > 0 %}
+                            +{{ game.home_ml }}
+                        {% else %}
+                            {{ game.home_ml }}
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="spread">
+                    <p class="market">Spread</p>
+                    <p class="away_spread">
+                        {% if game.away_point > 0 and game.away_price > 0 %}
+                            +{{ game.away_point }} at +{{ game.away_price }}
+                        {% elif game.away_point > 0 and game.away_price < 0 %}
+                            +{{ game.away_point }} at {{ game.away_price }}
+                        {% elif game.away_point < 0 and game.away_price > 0 %}
+                            {{ game.away_point }} at +{{ game.away_price }}
+                        {% else %}
+                            {{ game.away_point }} at {{ game.away_price }}
+                        {% endif %}
+                    </p>
+                    <p>________________</p>
+                    <p class="home_spread">
+                        {% if game.home_point > 0 and game.home_price > 0 %}
+                            +{{ game.home_point }} at +{{ game.home_price }}
+                        {% elif game.home_point > 0 and game.home_price < 0 %}
+                            +{{ game.home_point }} at {{ game.home_price }}
+                        {% elif game.home_point < 0 and game.home_price > 0 %}
+                            {{ game.home_point }} at +{{ game.home_price }}
+                        {% else %}
+                            {{ game.home_point }} at {{ game.home_price }}
+                        {% endif %}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <div id="profile-view">
+        <div id="profile-header">
+            {% if user.is_authenticated %}
+            <h2>{{ user }}</h2>
+            <span class="user-info">Balance: ${{ user.balance|floatformat:2 }}</span>
+            <span class="user-info">Pending: ${{ user.pending|floatformat:2 }}</span>
+            {% endif %}
+        </div>
+        <hr>
+        <div id="bet-container">
+            <div class="btn-group btn-group-toggle" id="my-bets" data-toggle="buttons">
+                <label class="btn btn-secondary btn-lg active" onclick="displayPending();">
+                  <input type="radio" name="bet-options" id="my-pending-bets" autocomplete="off">Pending
+                </label>
+                <label class="btn btn-secondary btn-lg" onclick="displayCompleted();">
+                  <input type="radio" name="bet-options" id="my-completed-bets" autocomplete="off">Completed
+                </label>
+            </div>
+        </div>
+        <div id="pending-bets">
+            {% for bet in pending_bets %}
+                <div class="profile-bet" id="bet-{{ bet.id }}">
+                    <div class="p-bet">
+                        <p>&nbsp;<strong>{{ bet.game.away_team }}</strong> AT <strong>{{ bet.game.home_team }}</strong> - {{ bet.game.commence_time }} EST</p>
+                        {% if bet.home_bet and bet.market.market == "ml" %}
+                            <p>&nbsp;${{ bet }}
+                                {% if bet.game.home_ml > 0 %}
+                                    +{{ bet.game.home_ml }}
+                                {% else %}
+                                    {{ bet.game.home_ml }}
+                                {% endif %}
+                            </p>
+                        {% elif bet.home_bet and bet.market.market == "spread" %}
+                            <p>&nbsp;${{ bet }}
+                                {% if bet.game.home_point > 0 and bet.game.home_price > 0 %}
+                                    +{{ bet.game.home_point }} at +{{ bet.game.home_price }}
+                                {% elif bet.game.home_point > 0 and bet.game.home_price < 0 %}
+                                    +{{ bet.game.home_point }} at {{ bet.game.home_price }}
+                                {% elif bet.game.home_point < 0 and bet.game.home_price > 0 %}
+                                    {{ bet.game.home_point }} at +{{ bet.game.home_price }}
+                                {% else %}
+                                    {{ bet.game.home_point }} at {{ bet.game.home_price }}
+                                {% endif %}
+                            </p>
+                        {% elif bet.market.market == "ml" %}
+                            <p>&nbsp;${{ bet }}
+                                {% if bet.game.away_ml > 0 %}
+                                    +{{ bet.game.away_ml }}
+                                {% else %}
+                                    {{ bet.game.away_ml }}
+                                {% endif %}
+                            </p>
+                        {% else %}
+                            <p>&nbsp;${{ bet }}
+                                {% if bet.game.away_point > 0 and game.away_price > 0 %}
+                                    +{{ bet.game.away_point }} at +{{ bet.game.away_price }}
+                                {% elif bet.game.away_point > 0 and bet.game.away_price < 0 %}
+                                    +{{ bet.game.away_point }} at {{ bet.game.away_price }}
+                                {% elif bet.game.away_point < 0 and bet.game.away_price > 0 %}
+                                    {{ bet.game.away_point }} at +{{ bet.game.away_price }}
+                                {% else %}
+                                    {{ bet.game.away_point }} at {{ bet.game.away_price }}
+                                {% endif %}
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div id="completed-bets">
+            {% for bet in completed_bets %}
+                <div class="profile-bet" id="bet-{{ bet.id }}">
+                    <div class="p-bet">
+                        <p>&nbsp;<strong>{{ bet.game.away_team }}</strong> AT <strong>{{ bet.game.home_team }}</strong> - {{ bet.game.commence_time }} EST</p>
+                        {% if bet.home_bet and bet.market.market == "ml" %}
+                            <p>&nbsp;${{ bet }}
+                                {% if bet.game.home_ml > 0 %}
+                                    +{{ bet.game.home_ml }}
+                                {% else %}
+                                    {{ bet.game.home_ml }}
+                                {% endif %}
+                            </p>
+                        {% elif bet.home_bet and bet.market.market == "spread" %}
+                            <p>&nbsp;${{ bet }}
+                                {% if bet.game.home_point > 0 and bet.game.home_price > 0 %}
+                                    +{{ bet.game.home_point }} at +{{ bet.game.home_price }}
+                                {% elif bet.game.home_point > 0 and bet.game.home_price < 0 %}
+                                    +{{ bet.game.home_point }} at {{ bet.game.home_price }}
+                                {% elif bet.game.home_point < 0 and bet.game.home_price > 0 %}
+                                    {{ bet.game.home_point }} at +{{ bet.game.home_price }}
+                                {% else %}
+                                    {{ bet.game.home_point }} at {{ bet.game.home_price }}
+                                {% endif %}
+                            </p>
+                        {% elif bet.market.market == "ml" %}
+                            <p>&nbsp;${{ bet }}
+                                {% if bet.game.away_ml > 0 %}
+                                    +{{ bet.game.away_ml }}
+                                {% else %}
+                                    {{ bet.game.away_ml }}
+                                {% endif %}
+                            </p>
+                        {% else %}
+                            <p>&nbsp;${{ bet }}
+                                {% if bet.game.away_point > 0 and game.away_price > 0 %}
+                                    +{{ bet.game.away_point }} at +{{ bet.game.away_price }}
+                                {% elif bet.game.away_point > 0 and bet.game.away_price < 0 %}
+                                    +{{ bet.game.away_point }} at {{ bet.game.away_price }}
+                                {% elif bet.game.away_point < 0 and bet.game.away_price > 0 %}
+                                    {{ bet.game.away_point }} at +{{ bet.game.away_price }}
+                                {% else %}
+                                    {{ bet.game.away_point }} at {{ bet.game.away_price }}
+                                {% endif %}
+                            </p>
+                        {% endif %}
+                        {% if bet.status == "Won" %}
+                        <div class="p-outcome">&nbsp;<span style="color:chartreuse">{{ bet.status }}</span>: {{ bet.profit|floatformat:2 }}</div>
+                        {% elif bet.status == "Lost" %}
+                        <div class="p-outcome">&nbsp;<span style="color:orangered">{{ bet.status }}</span>: -{{ bet.wager }}</div>
+                        {% else %}
+                        <div class="p-outcome">&nbsp;<span style="color:yellow">{{ bet.status }}</span>: 0.0 </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div> 
+    </div>
+{% endblock %}
